@@ -119,6 +119,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             <label for="id_tipe">Select Type:</label>
             <select id="id_tipe" name="id_tipe">
+                <option value="">Select Type</option>
                 <option value="1">Admin</option>
                 <option value="2">Supervisor</option>
                 <option value="3">Petugas</option>

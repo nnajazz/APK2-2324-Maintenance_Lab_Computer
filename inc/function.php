@@ -64,7 +64,7 @@ function login($username, $password)
               FROM tbl_users u
               JOIN tbl_tipe_user t ON u.id_tipe = t.id_tipe
               WHERE u.username = '$username'";
-              
+
     $result = mysqli_query($KONEKSI, $query);
 
     if (mysqli_num_rows($result) > 0) {

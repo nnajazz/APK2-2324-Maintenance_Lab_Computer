@@ -2,4 +2,3 @@
 include "function.php";
 logout();
 ?>
-
