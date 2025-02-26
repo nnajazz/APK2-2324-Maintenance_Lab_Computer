@@ -1,136 +1,191 @@
 <?php
-include "function.php";
+@session_start();
+require_once 'function.php';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
-    $id_tipe = $_POST['id_tipe'];
-
-    $result = register($username, $password, $id_tipe);
-    if ($result === true) {
-        echo "<script>
-           alert('Registrasi berhasil!');
-           window.location.href = 'login.php';
-       </script>";
+//*cek apakah sudah login sebagai admin
+/*if (@$_SESSION['email']) {
+    if (@!$_SESSION['level']=="Admin") {
+        header("location:../inc/register.php");
     } else {
+        if (@$_SESSION['level']=="Petugas") {
+            header("location:../petugas/index.php");
+        } elseif (@$_SESSION['level']=="Laborant") {
+            header("location:../laborant/index.php");
+        } elseif (@$_SESSION['level']=="Kordinator") {
+            header("location:../kordinator/index.php");
+        }
+    } 
+}else {
+        header("location:../inc/login.php");
+    }*/
+
+
+//registarasi
+if (isset($_POST['registrasi'])) {
+    if (registrasi($_POST) > 0) {
         echo "<script>
-           alert('Registrasi gagal!');
-       </script>";
+        alert('user baru berhasil di tambahkan.');
+        document.location.href='login.php';
+        </script>";
+    } else {
+        echo mysqli_error($KONEKSI);
     }
 }
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light scroll-smooth group" data-layout="vertical" data-sidebar="light" data-sidebar-size="lg" data-mode="light" data-topbar="light" data-skin="default" data-navbar="sticky" data-content="fluid" dir="ltr">
+
+
+<!-- Mirrored from themesdesign.in/tailwick/html/auth-register-basic.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 07 Oct 2024 14:29:11 GMT -->
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
-    <style>
-        body {
-            background-color: #add8e6;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
 
-        .register-container {
-            background: #fff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2);
-            text-align: center;
-            width: 350px;
-        }
+    <meta charset="utf-8">
+    <title>Register | Tailwick - Admin & Dashboard Template</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta content="Minimal Admin & Dashboard Template" name="description">
+    <meta content="Themesdesign" name="author">
+    <!-- App favicon -->
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
+    <!-- Layout config Js -->
+    <script src="../assets/js/layout.js"></script>
+    <!-- Icons CSS -->
 
-        h2 {
-            color: #0073e6;
-            margin-bottom: 20px;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
-
-        input,
-        select,
-        button {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #5dade2;
-            border-radius: 5px;
-            font-size: 16px;
-            box-sizing: border-box;
-        }
-
-        button {
-            background-color: #0073e6;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #005bb5;
-        }
-
-        h5 {
-            margin-top: 10px;
-        }
-
-        h5 a {
-            color: #0073e6;
-            text-decoration: none;
-        }
-
-        label {
-            display: block;
-            text-align: left;
-            width: 100%;
-            font-weight: bold;
-            margin-top: 10px;
-        }
+    <!-- Tailwind CSS -->
 
 
-        h5 a:hover {
-            text-decoration: underline;
-        }
-    </style>
+    <link rel="stylesheet" href="../assets/css/tailwind2.css">
 </head>
 
-<body>
+<body class="flex items-center justify-center min-h-screen py-16 lg:py-10 bg-slate-50 dark:bg-zink-800 dark:text-zink-100 font-public">
 
-    <div class="register-container">
-        <h2>Register</h2>
-        <form method="POST">
-            <label for="username">Username / Email</label>
-            <input type="text" id="username" name="username" placeholder="Username / Email" required>
+    <div class="relative">
+        <div class="absolute hidden opacity-50 ltr:-left-16 rtl:-right-16 -top-10 md:block">
+            <svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 125 316" width="125" height="316">
+                <title>&lt;Group&gt;</title>
+                <g id="&lt;Group&gt;">
+                    <path id="&lt;Path&gt;" class="fill-custom-100/50 dark:fill-custom-950/50" d="m23.4 221.8l-1.3-3.1v-315.3l1.3 3.1z" />
+                    <path id="&lt;Path&gt;" class="fill-custom-100 dark:fill-custom-950" d="m31.2 229.6l-1.3-3.1v-315.3l1.3 3.1z" />
+                    <path id="&lt;Path&gt;" class="fill-custom-200/50 dark:fill-custom-900/50" d="m39 237.4l-1.3-3.1v-315.3l1.3 3.1z" />
+                    <path id="&lt;Path&gt;" class="fill-custom-200/75 dark:fill-custom-900/75" d="m46.8 245.2l-1.3-3.1v-315.3l1.3 3.1z" />
+                    <path id="&lt;Path&gt;" class="fill-custom-200 dark:fill-custom-900" d="m54.6 253.1l-1.3-3.1v-315.4l1.3 3.1z" />
+                    <path id="&lt;Path&gt;" class="fill-custom-300/50 dark:fill-custom-800/50" d="m62.4 260.9l-1.2-3.1v-315.4l1.2 3.1z" />
+                    <path id="&lt;Path&gt;" class="fill-custom-300/75 dark:fill-custom-800/75" d="m70.3 268.7l-1.3-3.1v-315.4l1.3 3.1z" />
+                    <path id="&lt;Path&gt;" class="fill-custom-300 dark:fill-custom-800" d="m78.1 276.5l-1.3-3.1v-315.3l1.3 3.1z" />
+                    <path id="&lt;Path&gt;" class="fill-custom-400/50 dark:fill-custom-700/50" d="m85.9 284.3l-1.3-3.1v-315.3l1.3 3.1z" />
+                    <path id="&lt;Path&gt;" class="fill-custom-400/75 dark:fill-custom-700/75" d="m93.7 292.1l-1.3-3.1v-315.3l1.3 3.1z" />
+                    <path id="&lt;Path&gt;" class="fill-custom-400 dark:fill-custom-700" d="m101.5 299.9l-1.3-3.1v-315.3l1.3 3.1z" />
+                    <path id="&lt;Path&gt;" class="fill-custom-500/50 dark:fill-custom-600/50" d="m109.3 307.8l-1.3-3.1v-315.4l1.3 3.1z" />
+                </g>
+            </svg>
+        </div>
 
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="Password" required>
+        <div class="absolute hidden -rotate-180 opacity-50 ltr:-right-16 rtl:-left-16 -bottom-10 md:block">
+            <svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 125 316" width="125" height="316">
+                <title>&lt;Group&gt;</title>
+                <g id="&lt;Group&gt;">
+                    <path id="&lt;Path&gt;" class="fill-custom-100/50 dark:fill-custom-950/50" d="m23.4 221.8l-1.3-3.1v-315.3l1.3 3.1z" />
+                    <path id="&lt;Path&gt;" class="fill-custom-100 dark:fill-custom-950" d="m31.2 229.6l-1.3-3.1v-315.3l1.3 3.1z" />
+                    <path id="&lt;Path&gt;" class="fill-custom-200/50 dark:fill-custom-900/50" d="m39 237.4l-1.3-3.1v-315.3l1.3 3.1z" />
+                    <path id="&lt;Path&gt;" class="fill-custom-200/75 dark:fill-custom-900/75" d="m46.8 245.2l-1.3-3.1v-315.3l1.3 3.1z" />
+                    <path id="&lt;Path&gt;" class="fill-custom-200 dark:fill-custom-900" d="m54.6 253.1l-1.3-3.1v-315.4l1.3 3.1z" />
+                    <path id="&lt;Path&gt;" class="fill-custom-300/50 dark:fill-custom-800/50" d="m62.4 260.9l-1.2-3.1v-315.4l1.2 3.1z" />
+                    <path id="&lt;Path&gt;" class="fill-custom-300/75 dark:fill-custom-800/75" d="m70.3 268.7l-1.3-3.1v-315.4l1.3 3.1z" />
+                    <path id="&lt;Path&gt;" class="fill-custom-300 dark:fill-custom-800" d="m78.1 276.5l-1.3-3.1v-315.3l1.3 3.1z" />
+                    <path id="&lt;Path&gt;" class="fill-custom-400/50 dark:fill-custom-700/50" d="m85.9 284.3l-1.3-3.1v-315.3l1.3 3.1z" />
+                    <path id="&lt;Path&gt;" class="fill-custom-400/75 dark:fill-custom-700/75" d="m93.7 292.1l-1.3-3.1v-315.3l1.3 3.1z" />
+                    <path id="&lt;Path&gt;" class="fill-custom-400 dark:fill-custom-700" d="m101.5 299.9l-1.3-3.1v-315.3l1.3 3.1z" />
+                    <path id="&lt;Path&gt;" class="fill-custom-500/50 dark:fill-custom-600/50" d="m109.3 307.8l-1.3-3.1v-315.4l1.3 3.1z" />
+                </g>
+            </svg>
+        </div>
 
-            <label for="id_tipe">Select Type:</label>
-            <select id="id_tipe" name="id_tipe">
-                <option value="">Select Type</option>
-                <option value="1">Admin</option>
-                <option value="2">Supervisor</option>
-                <option value="3">Petugas</option>
-            </select>
+        <div class="mb-0 w-screen lg:w-[500px] card shadow-lg border-none shadow-slate-100 relative">
+            <div class="!px-10 !py-12 card-body">
+                <a href="#!">
+                    <img src="../assets/images/logo-light.png" alt="" class="hidden h-6 mx-auto dark:block">
+                    <img src="../assets/images/logo-dark.png" alt="" class="block h-6 mx-auto dark:hidden">
+                </a>
 
-            <button type="submit">Register</button>
+                <div class="mt-8 text-center">
+                    <h4 class="mb-1 text-custom-500 dark:text-custom-500">Create your free account</h4>
+                    <p class="text-slate-500 dark:text-zink-200">Get your free Tailwick account now</p>
+                </div>
 
-            <h5>Do you have an account? <a href="login.php">login</a></h5>
-        </form>
+                <form action="#!" class="mt-10" id="registerForm" method="post">
+                    <div class="mb-3">
+                        <label for="username-field" class="inline-block mb-2 text-base font-medium">Nama</label>
+                        <input type="hidden" id="username-field" name="id_user" class="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200" value="<?php echo autonumber("tbl_users", "id_user", 7, "ADM"); ?>">
+                        <input type="text" id="username-field" name="nama" class="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200" placeholder="Enter username">
+                        <div id="username-error" class="hidden mt-1 text-sm text-red-500">Please enter a username.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email-field" class="inline-block mb-2 text-base font-medium">Email</label>
+                        <input type="text" id="email-field" name="email" class="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200" placeholder="Enter email">
+                        <div id="email-error" class="hidden mt-1 text-sm text-red-500">Please enter a valid email address.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="inline-block mb-2 text-base font-medium">Password</label>
+                        <input type="password" id="password" name="password" class="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200" placeholder="Enter password">
+                        <!--<div id="password-error" class="hidden mt-1 text-sm text-red-500">Password must be at least 8 characters long and contain both letters and numbers.</div>-->
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="inline-block mb-2 text-base font-medium">Repeat Password</label>
+                        <input type="password" id="password" name="password2" class="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200" placeholder="Enter password">
+                        <!--<div id="password-error" class="hidden mt-1 text-sm text-red-500">Password must be at least 8 characters long and contain both letters and numbers.</div>-->
+                    </div>
+
+                    <!-- Dropdown Role -->
+                    <!--<div class="mb-3">
+                        <label class="inline-block mb-2 text-base font-medium" for="id_tipe">Select Role</label>
+                        <select id="id_tipe" name="id_tipe" class="form-select" required>
+                            <option value="#">--Select Role--</option>
+                            <option value="1">Admin</option>
+                            <option value="2">Laborant</option>
+                            <option value="3">Petugas</option>
+                            <option value="4">Kordinator</option>
+                        </select>
+                    </div>-->
+
+                    <div class="mt-10">
+                        <button type="submit" name="registrasi" class="w-full text-white transition-all duration-200 ease-linear btn bg-custom-500 border-custom-500 hover:text-white hover:bg-custom-600 hover:border-custom-600 focus:text-white focus:bg-custom-600 focus:border-custom-600 focus:ring focus:ring-custom-100 active:text-white active:bg-custom-600 active:border-custom-600 active:ring active:ring-custom-100 dark:ring-custom-400/20"> Registrasi </button>
+                    </div>
+
+                    <div class="relative text-center my-9 before:absolute before:top-3 before:left-0 before:right-0 before:border-t before:border-t-slate-200 dark:before:border-t-zink-500">
+                        <h5 class="inline-block px-2 py-0.5 text-sm bg-white text-slate-500 dark:bg-zink-600 dark:text-zink-200 rounded relative">Create account with</h5>
+                    </div>
+
+                    <div class="flex flex-wrap justify-center gap-2">
+                        <button type="button" class="flex items-center justify-center size-[37.5px] transition-all duration-200 ease-linear p-0 text-white btn bg-custom-500 border-custom-500 hover:text-white hover:bg-custom-600 hover:border-custom-600 focus:text-white focus:bg-custom-600 focus:border-custom-600 active:text-white active:bg-custom-600 active:border-custom-600"><i data-lucide="facebook" class="w-4 h-4"></i></button>
+                        <button type="button" class="flex items-center justify-center size-[37.5px] transition-all duration-200 ease-linear p-0 text-white btn bg-orange-500 border-orange-500 hover:text-white hover:bg-orange-600 hover:border-orange-600 focus:text-white focus:bg-orange-600 focus:border-orange-600 active:text-white active:bg-orange-600 active:border-orange-600"><i data-lucide="mail" class="w-4 h-4"></i></button>
+                        <button type="button" class="flex items-center justify-center size-[37.5px] transition-all duration-200 ease-linear p-0 text-white btn bg-sky-500 border-sky-500 hover:text-white hover:bg-sky-600 hover:border-sky-600 focus:text-white focus:bg-sky-600 focus:border-sky-600 active:text-white active:bg-sky-600 active:border-sky-600"><i data-lucide="twitter" class="w-4 h-4"></i></button>
+                        <button type="button" class="flex items-center justify-center size-[37.5px] transition-all duration-200 ease-linear p-0 text-white btn bg-slate-500 border-slate-500 hover:text-white hover:bg-slate-600 hover:border-slate-600 focus:text-white focus:bg-slate-600 focus:border-slate-600 active:text-white active:bg-slate-600 active:border-slate-600"><i data-lucide="github" class="w-4 h-4"></i></button>
+                    </div>
+
+                    <div class="mt-10 text-center">
+                        <p class="mb-0 text-slate-500 dark:text-zink-200">Back to <a href="login.php" class="font-semibold underline transition-all duration-150 ease-linear text-slate-500 dark:text-zink-200 hover:text-custom-500 dark:hover:text-custom-500">Login</a> </p>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
+    <script src='../assets/libs/choices.js/public/assets/scripts/choices.min.js'></script>
+    <script src="../assets/libs/%40popperjs/core/umd/popper.min.js"></script>
+    <script src="../assets/libs/tippy.js/tippy-bundle.umd.min.js"></script>
+    <script src="../assets/libs/simplebar/simplebar.min.js"></script>
+    <script src="../assets/libs/prismjs/prism.js"></script>
+    <script src="../assets/libs/lucide/umd/lucide.js"></script>
+    <script src="../assets/js/tailwick.bundle.js"></script>
+    <script src="../assets/js/pages/auth-register.init.js"></script>
+
 </body>
+
+
+<!-- Mirrored from themesdesign.in/tailwick/html/auth-register-basic.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 07 Oct 2024 14:29:12 GMT -->
 
 </html>

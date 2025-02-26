@@ -6,56 +6,114 @@ $tgl = date('Y-m-d H:i:s');
 // Koneksi database
 $HOSTNAME = "localhost";
 $DATABASE  = "db_maintenance_lab";
-$USERNAME  = "root";
+$email  = "root";
 $PASSWORD  = "";
 
-$KONEKSI = mysqli_connect($HOSTNAME, $USERNAME, $PASSWORD, $DATABASE);
+$KONEKSI = mysqli_connect($HOSTNAME, $email, $PASSWORD, $DATABASE);
 
 if (!$KONEKSI) {
     die("Koneksi error bozz!!! " . mysqli_connect_error());
 }
 
-// ===========================
-// FUNGSI REGISTER
-// ===========================
-function register($username, $password, $id_tipe)
+//fungsi autonumber
+function autonumber($tabel, $kolom, $lebar = 0, $awalan)
 {
-    global $KONEKSI, $tgl;
+    global $KONEKSI;
 
-    try {
-        // 1. Cek apakah username sudah ada
-        $checkUsername = mysqli_query($KONEKSI, "SELECT username FROM tbl_users WHERE username = '$username'");
-        if (mysqli_num_rows($checkUsername) > 0) {
-            return false;
-        }
+    $auto = mysqli_query($KONEKSI, "SELECT $kolom FROM $tabel WHERE $kolom LIKE '$awalan%' ORDER BY $kolom DESC LIMIT 1") or die(mysqli_error($KONEKSI));
+    $jumlah_record = mysqli_num_rows($auto);
 
-        // 2. Cek apakah tipe user valid
-        $cekTipe = mysqli_query($KONEKSI, "SELECT id_tipe FROM tbl_tipe_user WHERE id_tipe = '$id_tipe'");
-        if (mysqli_num_rows($cekTipe) == 0) {
-            return false;
-        }
+    if ($jumlah_record == 0) {
+        $nomor = 1;
+    } else {
+        $row = mysqli_fetch_array($auto);
+        $nomor = intval(substr($row[0], strlen($awalan))) + 1;
+    }
 
-        // 3. Hash password
-        $passwordHash = password_hash($password, PASSWORD_BCRYPT);
+    if ($lebar > 0) {
+        $angka = $awalan . str_pad($nomor, $lebar, "0", STR_PAD_LEFT);
+    } else {
+        $angka = $awalan . $nomor;
+    }
+    return $angka;
+}
+//echo autonumber ("tbl_users", "id_user", 3 , "USR");
 
-        // 4. Simpan data ke database
-        $query = "INSERT INTO tbl_users (username, password, id_tipe, created_at) 
-                VALUES ('$username', '$passwordHash', '$id_tipe', '$tgl')";
 
-        if (mysqli_query($KONEKSI, $query)) {
-            return true;
-        } else {
-            return false;
-        }
-    } catch (Exception $e) {
+//fungsi register
+function registrasi($data)
+{
+    global $KONEKSI;
+    global $tgl;
+
+    $id_user = stripslashes($data['id_user']);
+    $nama = stripslashes($data['nama']); //untuk cek form register dari nama
+    $email = strtolower(stripslashes($data['email'])); //memastikan form register mengirim input email berupa huruf kecil semua
+    $password = mysqli_real_escape_string($KONEKSI, $data['password']);
+    $password2 = mysqli_real_escape_string($KONEKSI, $data['password2']);
+
+
+    //echo $nama."|".$email."|".$password."|".$password2;
+
+    //cek email yang di input belum di database 
+
+    $result = mysqli_query($KONEKSI, "SELECT email from tbl_users WHERE email='$email'");
+    //var_dump($result);
+
+    if (mysqli_fetch_assoc($result)) {
+        echo "<script>
+                    alert('email yang anda input sudah ada di database.');
+                    </script>";
         return false;
     }
+
+    //cek konfirmasi password 
+    if ($password !==   $password2) {
+        echo "<script>
+                    alert('konfirmasi password!! password tidak sesuai');
+                    document.location.href='register.php';
+                    </script>";
+        return false;
+    }
+
+    //enkripsi password yang akan masukkan ke database 
+    $password_hash = password_hash($password, PASSWORD_DEFAULT); // menggunakan algoritma dari hash 
+    //var_dump($password_hash);
+
+    //ambil id_tipe_user yg ada di tbl_tipe_user
+
+    $tipe_user = "SELECT * FROM tbl_tipe_user WHERE tipe_user='Admin' ";
+    $hasil = mysqli_query($KONEKSI, $tipe_user);
+    $row = mysqli_fetch_assoc($hasil);
+    $id = $row['id_tipe_user'];
+
+    //tambahkan user baru ke tbl_users
+    $sql_users = "INSERT INTO tbl_users SET 
+                            id_user = '$id_user',
+                            role = '$id',
+                            email = '$email',
+                            password = '$password_hash',
+                            create_at = '$tgl'";
+
+    mysqli_query($KONEKSI, $sql_users) or die("gagal menambahkan user" . mysqli_error($KONEKSI));
+
+    //tambahkan user baru ke tbl_admin
+    $sql_admin  = "INSERT INTO tbl_admin SET
+                    id_user = '$id_user',
+                    nama_admin = '$nama',
+                    create_at = '$tgl' ";
+
+    mysqli_query($KONEKSI, $sql_admin) or die("gagal menambahkan user" . mysqli_error($KONEKSI));
+
+
+    echo "<script>
+                document.location.href='login.php';
+                </script>";
+
+    return mysqli_affected_rows($KONEKSI);
 }
 
-
-// ===========================
-// FUNGSI LOGIN
-// ===========================
+//fungsi login
 function login($username, $password)
 {
     global $KONEKSI;
@@ -79,7 +137,6 @@ function login($username, $password)
     return false;
 }
 
-// ===========================
 // FUNGSI LOGOUT
 // ===========================
 function logout()
