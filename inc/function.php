@@ -146,3 +146,17 @@ function logout()
     header("Location: login.php");
     exit();
 }
+
+function tampil($DATA)
+{ {
+        global $KONEKSI;
+
+        $HASIL = mysqli_query($KONEKSI, $DATA);
+        $row = []; //menyiapkan variabel / wadah yang masih kosong untuk nantinya akan kita gunakan untuk menyimpan data yang kita query / panggil dari database
+
+        while ($row = mysqli_fetch_assoc($HASIL)) {
+            $rows[] = $row; //kita masukkan datanya disini
+        }
+        return $rows; // kita kembalikan nilainya, di munculkan
+    }
+}
