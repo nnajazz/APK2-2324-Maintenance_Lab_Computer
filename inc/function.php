@@ -391,3 +391,216 @@ function hapus_admin()
 
     return mysqli_affected_rows($KONEKSI);
 }
+
+//fungsi tambah lab
+function tambah_lab($data)
+{
+    global $KONEKSI;
+    global $tgl;
+
+    $kode        = htmlspecialchars($data['kode']);
+    $nama_lab    = htmlspecialchars($data['nama_lab']);
+    $lokasi      = htmlspecialchars($data['lokasi']);
+    $kapasitas   = htmlspecialchars($data['kapasitas']);
+    $jumlah_pc   = htmlspecialchars($data['jumlah_pc']);
+
+    echo "<pre>";
+    print_r($data); // Melihat data yang akan diterima
+    echo "</pre>";
+
+    // Input data ke tabel
+    $sql = "INSERT INTO tbl_lab SET 
+                        kode_lab          = '$kode',
+                        nama_lab        = '$nama_lab',
+                        lokasi          = '$lokasi',
+                        kapasitas       = '$kapasitas',
+                        jumlah_pc       = '$jumlah_pc',
+                        create_at       = '$tgl' ";
+
+    // Cek apakah query berhasil atau tidak
+    if (mysqli_query($KONEKSI, $sql)) {
+        echo "<script>alert('Data berhasil ditambahkan!');</script>";
+        return true;
+    } else {
+        echo "<script>alert('Data tidak berhasil ditambahkan! " . mysqli_error($KONEKSI) . " ');</script>";
+        return false;
+    }
+}
+
+//fungsi tambah petugas
+function tambah_petugas($data, $file, $target)
+{
+    global $KONEKSI;
+    global $tgl;
+
+    $kode_petugas = htmlspecialchars($data['kode']);
+    $nama_petugas = htmlspecialchars($data['nama_pet']);
+    $email        = htmlspecialchars($data['email']);
+    $telepon      = htmlspecialchars($data['telepon']);
+    $jenkel       = htmlspecialchars($data['jenkel']);
+    $lab       = htmlspecialchars($data['lab']);
+    $role         = htmlspecialchars($data['role']);
+    $password     = mysqli_escape_string($KONEKSI, $data['password']);
+    $password2    = mysqli_escape_string($KONEKSI, $data['password2']);
+
+    //var_dump($_POST);
+    //var_dump($_FILES);
+
+    //die;
+    //pastikan gambar terupload
+    $gambar_foto = upload_file_new($data, $file, $target);
+
+    //var_dump($gambar_foto);
+    //die;
+
+    //jika gambar tidak di upload operasi di hentikan
+    if (!$gambar_foto) {
+        return false;
+    }
+
+    //cek email yg di daftar apakah sudah dipakai atau belum 
+    $result = mysqli_query($KONEKSI, "SELECT email FROM tbl_users WHERE email = '$email' ");
+
+    if (mysqli_fetch_assoc($result)) {
+        echo "<script>
+                    alert('email sudah ada di database :3');
+                    document.location.href='?pages=user_petugas';
+                    </script>";
+
+        return false;
+    }
+
+    //cek konfirmasi password
+    if ($password !== $password2) {
+        echo "<script>
+                    alert('konfirmasi email yg di input tidak sama !!!');
+                    document.location.href='?pages=user_petugas';
+                    </script>";
+        return false;
+    }
+
+    //kita lakukan enkipsi password yang dia input
+    $password_hash = password_hash($password, PASSWORD_DEFAULT);
+
+    //tambahkan data user baru ke tbl_users
+    $sql_user = "INSERT INTO tbl_users SET 
+                            id_user = '$kode_petugas',
+                            email = '$email',
+                            password = '$password_hash',
+                            role = '$role',
+                            create_at = '$tgl' ";
+
+    mysqli_query($KONEKSI, $sql_user) or die("gagal menambahkan user baru") .  mysqli_error($KONEKSI);
+
+    //tambah data user baru ke tbl admin
+    $sql_petugas  = "INSERT INTO tbl_petugas SET 
+                                nama_petugas       = '$nama_petugas',
+                                telepon_petugas    = '$telepon',
+                                path_photo_petugas = '$gambar_foto',
+                                id_user            = '$kode_petugas',
+                                jenkel             = '$jenkel',
+                                id_lab             = '$lab',
+                                create_at          = '$tgl' ";
+
+    mysqli_query($KONEKSI, $sql_petugas) or die("gagal menambahkan admin baru" . mysqli_error($KONEKSI));
+
+    return mysqli_affected_rows($KONEKSI);
+}
+
+//fungsi edit petugas
+function edit_petugas($data, $file, $target)
+{
+    global $KONEKSI;
+    global $tgl;
+
+    $id_petugas           = stripslashes($data['kode']);
+    $email                = stripslashes($data['email']);
+    $nama_petugas         = stripslashes($data['nama_petugas']);
+    $telepon              = stripslashes($data['telepon']);
+    $lab                  = stripslashes($data['nama_lab']);
+    $jenkel               = stripslashes($data['jenkel']);
+    $foto_lama            = stripslashes($data['photo_db']);
+
+    $cek_file_lama = $target . $foto_lama;
+
+    //cek apakah ada file baru yg di upload oleh server
+    if (isset($_FILES['Photo']) && $_FILES['Photo']['error'] !== UPLOAD_ERR_NO_FILE) {
+
+        //kita harus upload file
+        $gambar_foto = upload_file_new($data, $file, $target);
+        echo $gambar_foto;
+
+        //kita pastikan nama file baru ter upload (debugging)
+        echo "File Baru :" . $gambar_foto . "Berhasil Di Upload";
+
+        //kita pastikan file lama di hapuskan (unlink)
+
+        //cek dulu file lama di db apakah ada di folder target
+        if ($gambar_foto && file_exists($cek_file_lama)) {
+            if (unlink($cek_file_lama)) {
+                //true ==> berhasil hapus file lama
+                echo "file lama berhasil di hapus";
+            } else {
+                echo "gagal menghapus file lama";
+            }
+        }
+    } else {
+        //jika tidak ada file baru, gunakan gambar lama
+        $gambar_foto = $foto_lama;
+        echo "menggunakan foto lama: " . $foto_lama;
+    }
+
+
+    //update edit data ke tbl_petugas
+    $sql_user_petugas = "UPDATE tbl_petugas SET 
+                                    nama_petugas         = '$nama_petugas',
+                                    telepon_petugas      = '$telepon',
+                                    path_photo_petugas   = '$gambar_foto',
+                                    jenkel               = '$jenkel',
+                                    id_lab               = '$lab',
+                                    update_at            = '$tgl' WHERE id_user = '$id_petugas' ";
+
+    if (mysqli_query($KONEKSI, $sql_user_petugas)) {
+        echo "<script>
+                    alert('data berhasil di update')
+                    </script>";
+    } else {
+        echo "<script>
+                    alert('gagal update data')
+                    </script>";
+    }
+
+    return mysqli_affected_rows($KONEKSI);
+}
+
+//fungsi hapus petugas
+function hapus_petugas()
+{
+    global $KONEKSI;
+    $id_user = $_GET['id'];
+
+    // hapus file gambar yang usernya kita hapus
+    $sql = "SELECT * FROM tbl_petugas WHERE id_user='$id_user' " or die("Data tidak ditemukan" . mysqli_error($KONEKSI));
+    $hasil = mysqli_query($KONEKSI, $sql);
+    $row = mysqli_fetch_assoc($hasil);
+
+    $photo = $row['path_photo_petugas'];
+    $target = '../images/petugas/';
+
+    if (!$photo == "") {
+        // Jika ada maka kita hapus
+        unlink($target . $photo);
+    }
+
+
+    // hapus data di tabel admin
+    $query_admin = "DELETE FROM tbl_petugas WHERE id_user='$id_user' ";
+    mysqli_query($KONEKSI, $query_admin) or die("Gagal melakukan hapus data admin" . mysqli_error($KONEKSI));
+
+    // hapus data di tabel users
+    $query_user = "DELETE FROM tbl_users WHERE id_user='$id_user' ";
+    mysqli_query($KONEKSI, $query_user) or die("Gagal melakukan hapus data user" . mysqli_error($KONEKSI));
+
+
+    return mysqli_affected_rows($KONEKSI);
+}
